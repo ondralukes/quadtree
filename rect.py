@@ -6,6 +6,10 @@ class Coordinate:
     Represents a number of the form p*2^e
     """
     def __init__(self, p, e):
+        if p == 0:
+            self.p = 0
+            self.e = 0
+            return
         while p % 2 == 0:
             p //= 2
             e += 1
@@ -23,7 +27,7 @@ class Coordinate:
     def __gt__(self, other):
         if self.e <= other.e:
             return self.p > other.p*(2**(other.e-self.e))
-        return other.p < self.p*(2**(other.e-self.e))
+        return other.p < self.p*(2**(self.e-other.e))
 
     def __eq__(self, other):
         return self.e == other.e and self.p == other.p
@@ -37,6 +41,11 @@ class Coordinate:
     def __repr__(self):
         return f"{self.p}*2^({self.e})"
 
+    def shift(self, e):
+        return Coordinate(self.p, self.e+e)
+
+    def to_float(self):
+        return self.p * (2**self.e)
 
 class Rect:
     """
@@ -58,3 +67,12 @@ class Rect:
 
     def is_empty(self):
         return self.x1 >= self.x2 or self.y1 >= self.y2
+
+    def width(self):
+        return self.x2 - self.x1
+
+    def height(self):
+        return self.y2 - self.y1
+
+    def __repr__(self):
+        return f"({self.x1},{self.y1})x({self.x2},{self.y2})"
