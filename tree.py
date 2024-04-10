@@ -1,4 +1,5 @@
 from rect import Rect, Coordinate
+import time
 
 class Tree:
     def __init__(self):
@@ -13,7 +14,22 @@ class Tree:
 
     def render(self, renderer):
         renderer.hint_height(self.stats.get_height())
-        self.root.render(Rect(Coordinate(0,0), Coordinate(0,0), Coordinate(1,0), Coordinate(1,0)), renderer, 0)
+        stats = RenderStats()
+        stats.start_stopwatch()
+        self.root.render(Rect(Coordinate(0,0), Coordinate(0,0), Coordinate(1,0), Coordinate(1,0)), renderer, 0, stats)
+        stats.stop_stopwatch()
+        return stats
+
+class RenderStats:
+    def __init__(self):
+        self.traversed = 0
+        self.drawn = 0
+
+    def start_stopwatch(self):
+        self.time = time.perf_counter()
+
+    def stop_stopwatch(self):
+        self.time = time.perf_counter()-self.time
 
 class TreeStats:
     def __init__(self):
@@ -77,11 +93,13 @@ class Node:
             self.children = [[None]*2,[None]*2]
 
 
-    def render(self, current, renderer, depth):
+    def render(self, current, renderer, depth, stats):
+        stats.traversed += 1
         if (current & renderer.viewport).is_empty():
             return
 
         if self.value is not None:
+            stats.drawn += 1
             renderer.draw(current, self.value, depth)
             return
 
@@ -93,7 +111,7 @@ class Node:
                                   current.x1+(dx+1)*halfwidth, current.y1+(dy+1)*halfheight)
                 if self.children[dx][dy] is None:
                     continue
-                self.children[dx][dy].render(child_rect, renderer, depth+1)
+                self.children[dx][dy].render(child_rect, renderer, depth+1, stats)
 
     def log_remove(self, stats, depth, include_self):
         for dx in range(2):

@@ -44,6 +44,13 @@ class Coordinate:
     def shift(self, e):
         return Coordinate(self.p, self.e+e)
 
+    def round_to(self, e):
+        if e <= self.e:
+            return Coordinate(self.p, self.e)
+        d = 2**(e-self.e-1)
+        p = self.p//d
+        return Coordinate((self.p+1)//2, e)
+
     def to_float(self):
         return self.p * (2**self.e)
 
