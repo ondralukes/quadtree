@@ -9,7 +9,7 @@ class App:
         self.tree = Tree()
         self.canvas = Canvas(root, width=512, height=512, bg="white")
         self.renderer = TkinterRenderer(self.canvas)
-        self.stats_plot_canvas = Canvas(root, width=512, height=168, bg='white')
+        self.stats_plot_canvas = Canvas(root, width=512, height=173, bg='white')
         self.stats_plot = StatsPlot(self.stats_plot_canvas)
         self.is_drawing = False
         self.is_panning = False
@@ -41,6 +41,18 @@ class App:
         self.zoom_slider.pack()
         self.zoom_label = Label(root, text="Zoom: 1x")
         self.zoom_label.pack()
+
+        self.brush_slider = Scale(
+                root,
+                from_=3,to_=7, length=300,
+                orient="horizontal", showvalue=0,
+                command=self.on_brush_changed
+                )
+        self.brush_slider.set(5)
+        self.brush_slider.pack()
+        self.brush_label = Label(root, text="Brush size: 32")
+        self.brush_label.pack()
+
 
         self.render_stats_label = Label(root)
         self.render_stats_label.pack()
@@ -81,6 +93,11 @@ class App:
         self.renderer.set_viewport_zoom(-z)
         self.zoom_label.config(text=f"Zoom: {2**z}x")
         self.draw()
+
+    def on_brush_changed(self, brush):
+        bs = int(brush)
+        self.renderer.set_brush_size(bs)
+        self.brush_label.config(text=f"Brush size: {2**bs}")
 
     def on_right_down(self, e):
         self.is_panning = True

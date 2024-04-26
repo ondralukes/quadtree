@@ -17,5 +17,5 @@ class StatsPlot:
             self.canvas.create_rectangle(i*bw+bw/2, 128, (i+1)*bw, 128-red_leaves*lh, fill='red')
             self.canvas.create_text(i*bw+bw/2, 138, text=f"1/{2**i}")
             self.canvas.create_text(i*bw+bw/2, 148, text=f"{total}")
-            self.canvas.create_text(i*bw+bw/3, 158, text=f"{blue_leaves}", fill='blue')
-            self.canvas.create_text(i*bw+2*bw/3, 158, text=f"{red_leaves}", fill='red')
+            self.canvas.create_text(i*bw+bw/2, 158, text=f"{blue_leaves}", fill='blue')
+            self.canvas.create_text(i*bw+bw/2, 168, text=f"{red_leaves}", fill='red')

@@ -6,6 +6,7 @@ class TkinterRenderer:
         self.canvas = canvas
         self.target = None
         self.zoom = 0
+        self.brush_size = Coordinate(1, 3)
         self.height_hint = 0
         self.pan_cummulative_x = 0
         self.pan_cummulative_y = 0
@@ -27,7 +28,7 @@ class TkinterRenderer:
         b = 0
         if not value:
             (r,b) = (b,r)
-        self.canvas.create_rectangle(x1, y1, x2, y2, outline="", fill=f"#{r:02x}00{b:02x}")
+        self.canvas.create_rectangle(x1, y1, x2, y2, outline="green", fill=f"#{r:02x}00{b:02x}")
         if self.target_cursor is not None:
             self.canvas.tag_raise(self.target_cursor)
 
@@ -38,11 +39,12 @@ class TkinterRenderer:
         return -self.zoom + 9
 
     def set_target(self, mx, my):
-        mx = (mx // 16)*16
-        my = (my // 16)*16
+        mx = (mx // 8)*8
+        my = (my // 8)*8
+        bs = self.brush_size.shift(self.zoom-9)
         self.target = Rect(
-                self.viewport.x1+Coordinate(mx-32, self.zoom-9), self.viewport.y1+Coordinate(my-32, self.zoom-9),
-                self.viewport.x1+Coordinate(mx+32, self.zoom-9), self.viewport.y1+Coordinate(my+32, self.zoom-9)
+                self.viewport.x1+Coordinate(mx, self.zoom-9)-bs, self.viewport.y1+Coordinate(my, self.zoom-9)-bs,
+                self.viewport.x1+Coordinate(mx, self.zoom-9)+bs, self.viewport.y1+Coordinate(my, self.zoom-9)+bs
                 )
         if self.target_cursor is not None:
             self.canvas.delete(self.target_cursor)
@@ -64,6 +66,9 @@ class TkinterRenderer:
         self.viewport = Rect(cx-h,cy-h,cx+h,cy+h)
         self.pan_cummulative_x = 0
         self.pan_cummulative_y = 0
+
+    def set_brush_size(self, size):
+        self.brush_size = Coordinate(1, size)
 
     def move_viewport(self, x, y):
         self.pan_cummulative_x += x
