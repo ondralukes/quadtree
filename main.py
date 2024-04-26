@@ -56,6 +56,7 @@ class App:
 
         self.render_stats_label = Label(root)
         self.render_stats_label.pack()
+        self.draw()
 
     def draw(self):
         self.renderer.clear()
