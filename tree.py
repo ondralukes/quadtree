@@ -6,6 +6,7 @@ class Tree:
         self.stats = TreeStats()
         self.root = Node(self.stats, 0)
         self.root.value = False
+        self.leaf_areas = [Coordinate(1,0), Coordinate(0, 0)]
         self.stats.add_leaf(0, False)
 
     def fill(self, target, value):
@@ -25,6 +26,7 @@ class RenderStats:
     def __init__(self):
         self.traversed = 0
         self.drawn = 0
+        self.drawn_interpolated = 0
 
     def start_stopwatch(self):
         self.time = time.perf_counter()
@@ -74,6 +76,7 @@ class Node:
         self.value = None
         self.children = [[None]*2,[None]*2]
         stats.add(depth)
+        self.leaf_areas = [Coordinate(0,0), Coordinate(0,0)]
 
     def fill(self, current, target, value, stats, depth, force_down=False):
         if (current & target).is_empty():
@@ -83,6 +86,10 @@ class Node:
             if self.value is not None:
                 stats.remove_leaf(depth, self.value)
             self.value = value
+            if self.value:
+                self.leaf_areas = [Coordinate(0,0), Coordinate(1, -2*depth)]
+            else:
+                self.leaf_areas = [Coordinate(1, -2*depth), Coordinate(0,0)]
             stats.add_leaf(depth, self.value)
             self.log_remove(stats, depth, False)
             self.children = [[None]*2,[None]*2]
@@ -102,6 +109,7 @@ class Node:
         halfheight = current.height().shift(-1)
         common_cnt = 0
         common_value = None
+        self.leaf_areas = [Coordinate(0,0), Coordinate(0,0)]
         for dx in range(2):
             for dy in range(2):
                 child_rect = Rect(current.x1+dx*halfwidth, current.y1+dy*halfheight,
@@ -114,8 +122,14 @@ class Node:
                 else:
                     common_value = self.children[dx][dy].value
                     common_cnt = 1
+                self.leaf_areas[0] += self.children[dx][dy].leaf_areas[0]
+                self.leaf_areas[1] += self.children[dx][dy].leaf_areas[1]
         if common_value != None and common_cnt == 4 and not force_down:
             self.value = common_value
+            if self.value:
+                self.leaf_areas = [Coordinate(0,0), Coordinate(1, -2*depth)]
+            else:
+                self.leaf_areas = [Coordinate(1, -2*depth), Coordinate(0,0)]
             stats.add_leaf(depth, self.value)
             self.log_remove(stats, depth, False)
             self.children = [[None]*2,[None]*2]
@@ -129,6 +143,12 @@ class Node:
         if self.value is not None:
             stats.drawn += 1
             renderer.draw(current, self.value, depth)
+            return
+
+        if depth == renderer.get_max_depth():
+            stats.drawn += 1
+            stats.drawn_interpolated += 1
+            renderer.draw(current, self.leaf_areas[1] > self.leaf_areas[0], depth)
             return
 
         halfwidth = current.width().shift(-1)

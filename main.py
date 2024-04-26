@@ -32,8 +32,15 @@ class App:
         self.color_radio_blue = Radiobutton(root, text="Blue", variable=self.color, value=False)
         self.color_radio_blue.pack()
 
-        self.zoom_slider = Scale(root, from_=0,to_=8, length=300, orient="horizontal", command=self.on_zoom_changed)
+        self.zoom_slider = Scale(
+                root,
+                from_=0,to_=8, length=300,
+                orient="horizontal", showvalue=0,
+                command=self.on_zoom_changed
+                )
         self.zoom_slider.pack()
+        self.zoom_label = Label(root, text="Zoom: 1x")
+        self.zoom_label.pack()
 
         self.render_stats_label = Label(root)
         self.render_stats_label.pack()
@@ -42,7 +49,7 @@ class App:
         self.renderer.clear()
         stats = self.tree.render(self.renderer)
         self.render_stats_label.config(
-                text=f"{stats.drawn} drawn / {stats.traversed} traversed / took {stats.time*1000:.02f} ms"
+                text=f"{stats.drawn} drawn ({stats.drawn_interpolated} interpolated) / {stats.traversed} traversed / took {stats.time*1000:.02f} ms"
             )
         self.stats_plot.plot(self.tree.stats)
 
@@ -61,7 +68,7 @@ class App:
 
     def on_mouse_down(self, e):
         self.is_drawing = True
-        self.draw()
+        self.on_mouse_move(e)
 
     def on_mouse_up(self, e):
         self.is_drawing = False
@@ -70,7 +77,9 @@ class App:
         self.renderer.clear_target()
 
     def on_zoom_changed(self, zoom):
-        self.renderer.set_viewport_zoom(-int(zoom))
+        z = int(zoom)
+        self.renderer.set_viewport_zoom(-z)
+        self.zoom_label.config(text=f"Zoom: {2**z}x")
         self.draw()
 
     def on_right_down(self, e):

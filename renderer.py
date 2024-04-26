@@ -27,12 +27,15 @@ class TkinterRenderer:
         b = 0
         if not value:
             (r,b) = (b,r)
-        self.canvas.create_rectangle(x1, y1, x2, y2, outline="green", fill=f"#{r:02x}00{b:02x}")
+        self.canvas.create_rectangle(x1, y1, x2, y2, outline="", fill=f"#{r:02x}00{b:02x}")
         if self.target_cursor is not None:
             self.canvas.tag_raise(self.target_cursor)
 
     def hint_height(self, h):
         self.height_hint = h
+
+    def get_max_depth(self):
+        return -self.zoom + 9
 
     def set_target(self, mx, my):
         mx = (mx // 16)*16
