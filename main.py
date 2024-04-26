@@ -2,14 +2,16 @@ from tkinter import *
 from tree import Tree
 from rect import Rect,Coordinate
 from renderer import TkinterRenderer
+from stats_plot import StatsPlot
 
 class App:
     def __init__(self, root):
         self.tree = Tree()
         self.canvas = Canvas(root, width=512, height=512, bg="white")
         self.renderer = TkinterRenderer(self.canvas)
+        self.stats_plot_canvas = Canvas(root, width=512, height=168, bg='white')
+        self.stats_plot = StatsPlot(self.stats_plot_canvas)
         self.is_drawing = False
-        self.mouse_hovering = False
         self.is_panning = False
         self.prev_x = 0
         self.prev_y = 0
@@ -21,6 +23,8 @@ class App:
         self.canvas.bind("<ButtonRelease-3>", self.on_right_up)
         self.canvas.bind("<Leave>", self.on_mouse_leave)
         self.canvas.pack()
+
+        self.stats_plot_canvas.pack()
 
         self.color = BooleanVar()
         self.color_radio_red = Radiobutton(root, text="Red", variable=self.color, value=True)
@@ -35,26 +39,25 @@ class App:
         self.render_stats_label.pack()
 
     def draw(self):
-        if self.is_drawing:
-            self.tree.fill(self.renderer.target, self.color.get())
         self.renderer.clear()
         stats = self.tree.render(self.renderer)
         self.render_stats_label.config(
                 text=f"{stats.drawn} drawn / {stats.traversed} traversed / took {stats.time*1000:.02f} ms"
             )
-        if self.mouse_hovering:
-            self.renderer.draw_target()
+        self.stats_plot.plot(self.tree.stats)
 
     def on_mouse_move(self, e):
-        self.mouse_hovering = True
         if self.is_panning:
             dx = e.x-self.prev_x
             dy = e.y-self.prev_y
             self.renderer.move_viewport(-dx,-dy)
             self.prev_x = e.x
             self.prev_y = e.y
+        if self.is_drawing and self.renderer.target is not None:
+            self.tree.fill(self.renderer.target, self.color.get())
+        if self.is_panning or self.is_drawing:
+            self.draw()
         self.renderer.set_target(e.x,e.y)
-        self.draw()
 
     def on_mouse_down(self, e):
         self.is_drawing = True
@@ -64,8 +67,7 @@ class App:
         self.is_drawing = False
 
     def on_mouse_leave(self, e):
-        self.mouse_hovering = False
-        self.draw()
+        self.renderer.clear_target()
 
     def on_zoom_changed(self, zoom):
         self.renderer.set_viewport_zoom(-int(zoom))

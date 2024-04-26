@@ -9,6 +9,7 @@ class TkinterRenderer:
         self.height_hint = 0
         self.pan_cummulative_x = 0
         self.pan_cummulative_y = 0
+        self.target_cursor = None
 
     def to_viewport_coords(self, rect):
         x1 = (rect.x1 - self.viewport.x1).shift(9).to_float()/(self.viewport.width().to_float())
@@ -27,6 +28,8 @@ class TkinterRenderer:
         if not value:
             (r,b) = (b,r)
         self.canvas.create_rectangle(x1, y1, x2, y2, outline="green", fill=f"#{r:02x}00{b:02x}")
+        if self.target_cursor is not None:
+            self.canvas.tag_raise(self.target_cursor)
 
     def hint_height(self, h):
         self.height_hint = h
@@ -38,12 +41,17 @@ class TkinterRenderer:
                 self.viewport.x1+Coordinate(mx-32, self.zoom-9), self.viewport.y1+Coordinate(my-32, self.zoom-9),
                 self.viewport.x1+Coordinate(mx+32, self.zoom-9), self.viewport.y1+Coordinate(my+32, self.zoom-9)
                 )
-
-    def draw_target(self):
-        if self.target is None:
-            return
+        if self.target_cursor is not None:
+            self.canvas.delete(self.target_cursor)
+            self.target_cursor = None
         [x1,y1,x2,y2] = self.to_viewport_coords(self.target)
-        self.canvas.create_rectangle(x1, y1, x2, y2, fill="green")
+        self.target_cursor = self.canvas.create_rectangle(x1, y1, x2, y2, fill="green")
+
+    def clear_target(self):
+        self.target = None
+        if self.target_cursor is not None:
+            self.canvas.delete(self.target_cursor)
+            self.targer_cursor = None
 
     def set_viewport_zoom(self, e):
         self.zoom = e

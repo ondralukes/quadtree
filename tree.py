@@ -6,6 +6,7 @@ class Tree:
         self.stats = TreeStats()
         self.root = Node(self.stats, 0)
         self.root.value = False
+        self.stats.add_leaf(0, False)
 
     def fill(self, target, value):
         self.root.fill(
@@ -34,6 +35,7 @@ class RenderStats:
 class TreeStats:
     def __init__(self):
         self.counts = [0]
+        self.leaf_counts = [[0],[0]]
 
     def add(self, depth):
         while len(self.counts) <= depth:
@@ -45,8 +47,27 @@ class TreeStats:
         while self.counts[-1] == 0:
             self.counts.pop()
 
+    def add_leaf(self, depth, value):
+        v = 1 if value else 0
+        while len(self.leaf_counts[v]) <= depth:
+            self.leaf_counts[v].append(0)
+        self.leaf_counts[v][depth] += 1
+
+    def remove_leaf(self, depth, value):
+        v = 1 if value else 0
+        self.leaf_counts[v][depth] -= 1
+        while len(self.leaf_counts[v]) != 0 and self.leaf_counts[v][-1] == 0:
+            self.leaf_counts[v].pop()
+
     def get_height(self):
         return len(self.counts)
+
+    def get_leaf_count(self, depth, value):
+        v = 1 if value else 0
+        if len(self.leaf_counts[v]) <= depth:
+            return 0
+        return self.leaf_counts[v][depth]
+
 
 class Node:
     def __init__(self, stats, depth):
@@ -59,7 +80,10 @@ class Node:
             return
 
         if current in target and not force_down:
+            if self.value is not None:
+                stats.remove_leaf(depth, self.value)
             self.value = value
+            stats.add_leaf(depth, self.value)
             self.log_remove(stats, depth, False)
             self.children = [[None]*2,[None]*2]
             return
@@ -69,6 +93,9 @@ class Node:
 
         if self.value is not None and not force_down:
             self.fill(current, current, self.value, stats, depth, True)
+
+        if self.value is not None:
+            stats.remove_leaf(depth, self.value)
         self.value = None
 
         halfwidth = current.width().shift(-1)
@@ -89,6 +116,7 @@ class Node:
                     common_cnt = 1
         if common_value != None and common_cnt == 4 and not force_down:
             self.value = common_value
+            stats.add_leaf(depth, self.value)
             self.log_remove(stats, depth, False)
             self.children = [[None]*2,[None]*2]
 
@@ -121,3 +149,5 @@ class Node:
                 self.children[dx][dy].log_remove(stats, depth+1, True)
         if include_self:
             stats.remove(depth)
+            if self.value is not None:
+                stats.remove_leaf(depth, self.value)
